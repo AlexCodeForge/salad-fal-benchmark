@@ -61,14 +61,16 @@ jobs:
     permissions:
       contents: read
       packages: write
+      actions: read
     steps:
       - name: Set GHCR package visibility to public
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
           for pkg in salad-fal-sam3 salad-fal-depth; do
-            gh api --method PATCH "/user/packages/container/${pkg}" \
-              -f visibility=public \
-              || gh api --method PATCH "/user/packages/container/${pkg}" \
+            echo "Making ${pkg} public (repo-scoped)..."
+            gh api --method PATCH \
+              "/repos/${GITHUB_REPOSITORY}/packages/container/${pkg}" \
               --input - <<< '{"visibility":"public"}'
           done
