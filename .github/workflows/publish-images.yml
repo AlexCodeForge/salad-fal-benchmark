@@ -58,6 +58,7 @@ jobs:
   make-public:
     needs: [build-sam3, build-depth]
     runs-on: ubuntu-latest
+    continue-on-error: true
     permissions:
       contents: read
       packages: write
@@ -77,5 +78,5 @@ jobs:
             gh api --method PUT "/user/packages/container/${pkg}/repository/${REPO_ID}" || true
             echo "Setting ${pkg} visibility=public..."
             gh api --method PATCH "/user/packages/container/${pkg}" \
-              --input - <<< '{"visibility":"public"}'
+              --input - <<< '{"visibility":"public"}' || true
           done
