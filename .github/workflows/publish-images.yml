@@ -61,16 +61,21 @@ jobs:
     permissions:
       contents: read
       packages: write
-      actions: read
     steps:
-      - name: Set GHCR package visibility to public
+      - name: Link packages to repo and set visibility public
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
+          REPO_ID=$(gh api "/repos/${GITHUB_REPOSITORY}" --jq .id)
+          echo "Repository id=${REPO_ID}"
+          echo "Container packages visible to GITHUB_TOKEN:"
+          gh api "/user/packages?package_type=container" --paginate --jq '.[].name' || true
+
           for pkg in salad-fal-sam3 salad-fal-depth; do
-            echo "Making ${pkg} public (repo-scoped)..."
-            gh api --method PATCH \
-              "/repos/${GITHUB_REPOSITORY}/packages/container/${pkg}" \
+            echo "Linking ${pkg} to repository..."
+            gh api --method PUT "/user/packages/container/${pkg}/repository/${REPO_ID}" || true
+            echo "Setting ${pkg} visibility=public..."
+            gh api --method PATCH "/user/packages/container/${pkg}" \
               --input - <<< '{"visibility":"public"}'
           done
