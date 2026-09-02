@@ -1,19 +1,10 @@
-# Local mock inference stack — build from repo root (see docker/sam3 and docker/depth Dockerfiles).
+# Local mock inference stack — unified analyze service (see docker/analyze/Dockerfile).
 services:
-  sam3:
+  analyze:
     build:
       context: .
-      dockerfile: docker/sam3/Dockerfile
+      dockerfile: docker/analyze/Dockerfile
     ports:
       - "8001:8000"
-    environment:
-      MOCK_INFERENCE: "1"
-
-  depth:
-    build:
-      context: .
-      dockerfile: docker/depth/Dockerfile
-    ports:
-      - "8002:8000"
     environment:
       MOCK_INFERENCE: "1"

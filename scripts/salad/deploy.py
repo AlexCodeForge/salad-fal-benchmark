@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deploy SAM3 and depth SCE container groups via Salad API."""
+"""Deploy unified analyze SCE container group via Salad API."""
 
 from __future__ import annotations
 
@@ -13,18 +13,11 @@ from typing import Any
 
 import yaml
 
-from _api import (
-    CONFIG_DIR,
-    SaladClient,
-    depth_group_name,
-    raise_api_error,
-    sam3_group_name,
-)
+from _api import CONFIG_DIR, SaladClient, analyze_group_name, raise_api_error
 
-DEPLOYS: tuple[tuple[str, str, str], ...] = (
-    ("sam3", "sam3-group.yaml", "SALAD_SAM3_IMAGE"),
-    ("depth", "depth-group.yaml", "SALAD_DEPTH_IMAGE"),
-)
+DEPLOY_LABEL = "analyze"
+DEPLOY_TEMPLATE = "analyze-group.yaml"
+DEPLOY_IMAGE_ENV = "SALAD_ANALYZE_IMAGE"
 
 
 def _load_template(filename: str) -> dict[str, Any]:
@@ -105,21 +98,18 @@ def deploy_group(
     return created
 
 
-def _build_specs() -> list[tuple[str, dict[str, Any]]]:
-    specs: list[tuple[str, dict[str, Any]]] = []
-    for label, template_file, image_env in DEPLOYS:
-        image = os.environ.get(image_env, "").strip()
-        if not image:
-            print(f"{image_env} must be set", file=sys.stderr)
-            sys.exit(1)
-        group = sam3_group_name() if label == "sam3" else depth_group_name()
-        template = _load_template(template_file)
-        specs.append((label, _apply_overrides(template, image=image, group_name=group)))
-    return specs
+def _build_spec() -> tuple[str, dict[str, Any]]:
+    image = os.environ.get(DEPLOY_IMAGE_ENV, "").strip()
+    if not image:
+        print(f"{DEPLOY_IMAGE_ENV} must be set", file=sys.stderr)
+        sys.exit(1)
+    group = analyze_group_name()
+    template = _load_template(DEPLOY_TEMPLATE)
+    return DEPLOY_LABEL, _apply_overrides(template, image=image, group_name=group)
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Deploy bench SAM3 + depth container groups")
+    parser = argparse.ArgumentParser(description="Deploy bench-analyze container group")
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -127,16 +117,14 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    specs = _build_specs()
+    label, body = _build_spec()
 
     if args.dry_run:
-        for label, body in specs:
-            deploy_group(client=None, label=label, body=body, dry_run=True)
+        deploy_group(client=None, label=label, body=body, dry_run=True)
         return
 
     with SaladClient() as client:
-        for label, body in specs:
-            deploy_group(client, label=label, body=body, dry_run=False)
+        deploy_group(client, label=label, body=body, dry_run=False)
 
     print("\nDeploy complete. Run wait_ready.py then print_gateways.py.")
 

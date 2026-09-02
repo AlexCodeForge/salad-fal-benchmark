@@ -29,8 +29,7 @@ _MILESTONE_VARS: dict[str, tuple[tuple[str, bool], ...]] = {
     "m5": (
         ("FAL_KEY", False),
         ("SALAD_API_KEY", True),
-        ("SALAD_SAM3_GATEWAY_URL", False),
-        ("SALAD_DEPTH_GATEWAY_URL", False),
+        ("SALAD_ANALYZE_GATEWAY_URL", False),
     ),
 }
 
@@ -159,6 +158,9 @@ def validate_env(
         or os.environ.get("SALAD_ORGANIZATION_NAME", ""),
         "SALAD_PROJECT_NAME": settings.salad_project_name
         or os.environ.get("SALAD_PROJECT_NAME", ""),
+        "SALAD_ANALYZE_GATEWAY_URL": settings.resolved_analyze_gateway_url()
+        or os.environ.get("SALAD_ANALYZE_GATEWAY_URL", "")
+        or os.environ.get("SALAD_GATEWAY_URL", ""),
         "SALAD_SAM3_GATEWAY_URL": settings.salad_sam3_gateway_url
         or os.environ.get("SALAD_SAM3_GATEWAY_URL", ""),
         "SALAD_DEPTH_GATEWAY_URL": settings.salad_depth_gateway_url

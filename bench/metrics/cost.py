@@ -14,8 +14,8 @@ DEFAULT_PRICING_PATH = REPO_ROOT / "configs" / "pricing.yaml"
 class PricingConfig:
     fal_sam3_usd_per_call: float = 0.005
     fal_depth_usd_per_call: float = 0.0
-    salad_gpu_class: str = "rtx_4090"
-    salad_gpu_hour_usd: float = 0.16
+    salad_gpu_class: str = "rtx_3090"
+    salad_gpu_hour_usd: float = 0.09
 
 
 def _extract_float(text: str, key: str, default: float) -> float:
@@ -38,8 +38,8 @@ def load_pricing(path: Path | None = None) -> PricingConfig:
     return PricingConfig(
         fal_sam3_usd_per_call=_extract_float(text, "sam3_usd_per_call", 0.005),
         fal_depth_usd_per_call=_extract_float(text, "depth_usd_per_call", 0.0),
-        salad_gpu_class=_extract_str(text, "gpu_class", "rtx_4090"),
-        salad_gpu_hour_usd=_extract_float(text, "gpu_hour_usd", 0.16),
+        salad_gpu_class=_extract_str(text, "gpu_class", "rtx_3090"),
+        salad_gpu_hour_usd=_extract_float(text, "gpu_hour_usd", 0.09),
     )
 
 

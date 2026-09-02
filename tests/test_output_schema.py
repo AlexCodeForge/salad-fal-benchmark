@@ -37,8 +37,8 @@ def sample_row() -> dict:
 def test_pricing_yaml_values(repo_root: Path):
     pricing = load_pricing(repo_root / "configs" / "pricing.yaml")
     assert pricing.fal_sam3_usd_per_call == pytest.approx(0.005)
-    assert pricing.salad_gpu_hour_usd == pytest.approx(0.16)
-    assert pricing.salad_gpu_class == "rtx_4090"
+    assert pricing.salad_gpu_hour_usd == pytest.approx(0.09)
+    assert pricing.salad_gpu_class == "rtx_3090"
     assert fal_api_cost_usd(sam3_calls=4, depth_calls=1, pricing=pricing) == pytest.approx(
         0.02
     )

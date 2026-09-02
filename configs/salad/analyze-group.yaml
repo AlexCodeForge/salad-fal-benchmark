@@ -1,0 +1,43 @@
+# SCE container group template — unified SAM3 + depth (bench-analyze).
+# deploy.py sets container.image from SALAD_ANALYZE_IMAGE.
+#
+# GPU class UUID (RTX 3090 only):
+#   3090: a5db5c50-cbcb-4596-ae80-6a0c8090d80f
+
+name: bench-analyze
+display_name: bench-analyze
+
+container:
+  image: ""  # required: SALAD_ANALYZE_IMAGE
+  priority: batch
+  environment_variables:
+    MOCK_INFERENCE: "1"
+    HOST: "::"
+    PORT: "8000"
+  resources:
+    cpu: 4
+    memory: 20480
+    gpu_classes:
+      - a5db5c50-cbcb-4596-ae80-6a0c8090d80f
+    storage_amount: 32212254720  # 30 GiB
+
+autostart_policy: true
+restart_policy: always
+replicas: 1
+
+networking:
+  protocol: http
+  port: 8000
+  auth: true
+
+readiness_probe:
+  http:
+    path: /health
+    port: 8000
+    scheme: http
+    headers: []
+  initial_delay_seconds: 30
+  period_seconds: 10
+  timeout_seconds: 5
+  success_threshold: 1
+  failure_threshold: 3

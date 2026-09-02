@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
-# Start mock SAM3 + depth containers and run one Salad backend benchmark against localhost gateways.
+# Start mock analyze container and run one Salad backend benchmark against localhost gateway.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT}"
 
-SAM3_HEALTH="http://127.0.0.1:8001/health"
-DEPTH_HEALTH="http://127.0.0.1:8002/health"
-export SALAD_SAM3_GATEWAY_URL="http://127.0.0.1:8001"
-export SALAD_DEPTH_GATEWAY_URL="http://127.0.0.1:8002"
+ANALYZE_HEALTH="http://127.0.0.1:8001/health"
+export SALAD_ANALYZE_GATEWAY_URL="http://127.0.0.1:8001"
+export SALAD_GATEWAY_URL="http://127.0.0.1:8001"
 
 wait_health() {
   local url=$1
@@ -46,17 +45,14 @@ run_bench() {
   fi
 }
 
-echo "Starting local stack (sam3:8001, depth:8002, MOCK_INFERENCE=1) ..."
+echo "Starting local stack (analyze:8001, MOCK_INFERENCE=1) ..."
 docker compose up -d --build
 
-wait_health "${SAM3_HEALTH}" "sam3"
-wait_health "${DEPTH_HEALTH}" "depth"
+wait_health "${ANALYZE_HEALTH}" "analyze"
 
-echo "Health checks:"
-curl -fsS "${SAM3_HEALTH}"
-echo ""
-curl -fsS "${DEPTH_HEALTH}"
+echo "Health check:"
+curl -fsS "${ANALYZE_HEALTH}"
 echo ""
 
-echo "Running bench against localhost gateways ..."
+echo "Running bench against localhost gateway ..."
 run_bench

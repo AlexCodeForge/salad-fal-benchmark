@@ -18,6 +18,7 @@ DEFAULT_ORG = "ariseweb"
 DEFAULT_PROJECT = "default"
 DEFAULT_SAM3_GROUP = "bench-sam3"
 DEFAULT_DEPTH_GROUP = "bench-depth"
+DEFAULT_ANALYZE_GROUP = "bench-analyze"
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 CONFIG_DIR = os.path.join(REPO_ROOT, "configs", "salad")
@@ -47,8 +48,19 @@ def depth_group_name() -> str:
     return os.environ.get("SALAD_DEPTH_GROUP_NAME", DEFAULT_DEPTH_GROUP).strip() or DEFAULT_DEPTH_GROUP
 
 
+def analyze_group_name() -> str:
+    return (
+        os.environ.get("SALAD_ANALYZE_GROUP_NAME", DEFAULT_ANALYZE_GROUP).strip()
+        or DEFAULT_ANALYZE_GROUP
+    )
+
+
 def group_names() -> tuple[str, str]:
     return sam3_group_name(), depth_group_name()
+
+
+def all_group_names() -> tuple[str, str, str]:
+    return sam3_group_name(), depth_group_name(), analyze_group_name()
 
 
 class SaladClient:

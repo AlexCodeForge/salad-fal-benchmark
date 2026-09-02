@@ -9,7 +9,7 @@ import time
 
 import httpx
 
-from _api import SaladClient, gateway_url, group_names, require_api_key
+from _api import SaladClient, analyze_group_name, gateway_url, require_api_key
 
 
 def _group_ready(group: dict) -> tuple[bool, str]:
@@ -78,6 +78,10 @@ def wait_group(
     sys.exit(1)
 
 
+def _target_groups() -> tuple[str, ...]:
+    return (analyze_group_name(),)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Wait for Salad container groups to run")
     parser.add_argument(
@@ -100,11 +104,11 @@ def main() -> None:
     args = parser.parse_args()
 
     api_key = require_api_key()
-    sam3_name, depth_name = group_names()
-    print(f"Waiting for groups: {sam3_name}, {depth_name}")
+    targets = _target_groups()
+    print(f"Waiting for groups: {', '.join(targets)}")
 
     with SaladClient() as client:
-        for name in (sam3_name, depth_name):
+        for name in targets:
             wait_group(
                 client,
                 name,

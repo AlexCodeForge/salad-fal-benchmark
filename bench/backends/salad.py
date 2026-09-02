@@ -78,14 +78,28 @@ class SaladBackend:
     def __exit__(self, *_args: object) -> None:
         self.close()
 
+    def _resolve_gateway_urls(self) -> tuple[str, str]:
+        """Unified analyze gateway, or legacy dual sam3/depth URLs."""
+        if self.settings.salad_sam3_gateway_url:
+            sam3_url = self.settings.salad_sam3_gateway_url
+            depth_url = self.settings.salad_depth_gateway_url
+            if not depth_url:
+                raise ValueError(
+                    "SALAD_DEPTH_GATEWAY_URL must be set when using dual-gateway mode"
+                )
+            return sam3_url, depth_url
+
+        analyze_url = self.settings.resolved_analyze_gateway_url()
+        if not analyze_url:
+            raise ValueError(
+                "SALAD_ANALYZE_GATEWAY_URL (or SALAD_GATEWAY_URL) must be set; "
+                "or set SALAD_SAM3_GATEWAY_URL + SALAD_DEPTH_GATEWAY_URL for dual mode"
+            )
+        return analyze_url, analyze_url
+
     def segment(self, image_bytes: bytes) -> SaladSegmentOutput:
         """Sequential 4× SAM3 + depth; VLM stubbed at 260 cm."""
-        sam3_url = self.settings.salad_sam3_gateway_url
-        depth_url = self.settings.salad_depth_gateway_url
-        if not sam3_url or not depth_url:
-            raise ValueError(
-                "SALAD_SAM3_GATEWAY_URL and SALAD_DEPTH_GATEWAY_URL must be set"
-            )
+        sam3_url, depth_url = self._resolve_gateway_urls()
 
         image_w, image_h = image_dimensions(image_bytes)
         stages: list[StageResult] = []

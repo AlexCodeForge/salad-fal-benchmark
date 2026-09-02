@@ -3,7 +3,7 @@ fal:
   sam3_usd_per_call: 0.005
   depth_usd_per_call: 0.0
 
-# Salad SCE GPU-hour allocation (RTX 4090 benchmark default)
+# Salad SCE GPU-hour allocation (RTX 3090 benchmark default)
 salad:
-  gpu_class: rtx_4090
-  gpu_hour_usd: 0.16
+  gpu_class: rtx_3090
+  gpu_hour_usd: 0.09

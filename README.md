@@ -27,9 +27,9 @@ bench run --backend fal --fixture terminados-02 --replay
 pytest tests/test_fal_replay.py -q
 ```
 
-### Local mock stack (SAM3 + depth)
+### Local mock stack (unified analyze)
 
-Starts Docker services on **8001** (sam3) and **8002** (depth) with `MOCK_INFERENCE=1`, waits for `/health`, then runs one Salad backend iteration:
+Starts a single Docker service on **8001** with `MOCK_INFERENCE=1`, waits for `/health`, then runs one Salad backend iteration:
 
 ```bash
 chmod +x scripts/run-local-stack.sh
@@ -41,36 +41,32 @@ Manual control:
 ```bash
 docker compose up -d --build
 curl -sS http://127.0.0.1:8001/health
-curl -sS http://127.0.0.1:8002/health
 
-export SALAD_SAM3_GATEWAY_URL=http://127.0.0.1:8001
-export SALAD_DEPTH_GATEWAY_URL=http://127.0.0.1:8002
+export SALAD_ANALYZE_GATEWAY_URL=http://127.0.0.1:8001
 bench run --backend salad --fixture terminados-02 --runs 1
 ```
 
-Images build from the **repo root** (`docker build -f docker/sam3/Dockerfile .`).
+Images build from the **repo root** (`docker build -f docker/analyze/Dockerfile .`).
 
 ### Salad Cloud deploy
 
-Build and push images, then deploy SCE container groups (requires Salad + Docker Hub credentials):
+Build and push the unified analyze image, then deploy one SCE container group (requires Salad + registry credentials):
 
 ```bash
 export DOCKER_USER=your-dockerhub-user
 export TAG=dev
-./scripts/push-images.sh
-docker push "${DOCKER_USER}/salad-fal-sam3:${TAG}"
-docker push "${DOCKER_USER}/salad-fal-depth:${TAG}"
+docker build -f docker/analyze/Dockerfile -t "${DOCKER_USER}/salad-fal-analyze:${TAG}" .
+docker push "${DOCKER_USER}/salad-fal-analyze:${TAG}"
 
 export SALAD_API_KEY=...
 export SALAD_ORGANIZATION_NAME=...
 export SALAD_PROJECT_NAME=...
-export SALAD_SAM3_IMAGE="${DOCKER_USER}/salad-fal-sam3:${TAG}"
-export SALAD_DEPTH_IMAGE="${DOCKER_USER}/salad-fal-depth:${TAG}"
+export SALAD_ANALYZE_IMAGE="${DOCKER_USER}/salad-fal-analyze:${TAG}"
 
 python scripts/salad/preflight.py
 python scripts/salad/deploy.py
 python scripts/salad/wait_ready.py
-python scripts/salad/print_gateways.py   # export SALAD_*_GATEWAY_URL from output
+python scripts/salad/print_gateways.py   # export SALAD_ANALYZE_GATEWAY_URL from output
 
 bench run --backend salad --fixture terminados-02 --runs 3
 ```
@@ -81,7 +77,7 @@ Dry-run deploy payloads without API calls:
 python scripts/salad/deploy.py --dry-run
 ```
 
-Teardown:
+Teardown (removes bench-analyze and legacy bench-sam3 / bench-depth groups):
 
 ```bash
 python scripts/salad/destroy.py
@@ -90,4 +86,4 @@ python scripts/salad/destroy.py
 ## Docs
 
 - `docker/README.md` — image build, API routes, env vars
-- `configs/pricing.yaml` — fal list prices for cost comparison
+- `configs/pricing.yaml` — fal list prices and RTX 3090 GPU-hour rate ($0.09/hr)
