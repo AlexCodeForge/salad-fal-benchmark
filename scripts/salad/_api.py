@@ -10,9 +10,23 @@ import httpx
 
 API_BASE = "https://api.salad.com/api/public"
 
-GPU_CLASS_4090 = "ed563892-aacd-40f5-80b7-90c9be6c759b"
+# Salad org GPU class UUIDs (24 GB unless noted)
+GPU_CLASS_A5000 = "6d4e9e99-d27e-4751-8d7d-393f7d8ea949"
 GPU_CLASS_3090 = "a5db5c50-cbcb-4596-ae80-6a0c8090d80f"
-BENCHMARK_GPU_CLASSES = (GPU_CLASS_4090, GPU_CLASS_3090)
+GPU_CLASS_4090 = "ed563892-aacd-40f5-80b7-90c9be6c759b"
+GPU_CLASS_3090_TI = "9998fe42-04a5-4807-b3a5-849943f16c38"
+GPU_CLASS_5080 = "8065b30b-4a27-434c-8610-222e8df8fad7"
+GPU_CLASS_5070_TI = "1b8747be-e789-475b-a339-3c1028010d84"
+
+# Prefer cheaper 24 GB first (A5000 batch $0.09), then common fallbacks for SAM3+depth.
+BENCHMARK_GPU_CLASSES = (
+    GPU_CLASS_A5000,
+    GPU_CLASS_3090,
+    GPU_CLASS_4090,
+    GPU_CLASS_3090_TI,
+    GPU_CLASS_5080,
+    GPU_CLASS_5070_TI,
+)
 
 DEFAULT_ORG = "ariseweb"
 DEFAULT_PROJECT = "default"

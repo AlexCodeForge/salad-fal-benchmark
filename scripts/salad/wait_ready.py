@@ -15,7 +15,7 @@ from _api import SaladClient, analyze_group_name, gateway_url, require_api_key
 def _group_ready(group: dict) -> tuple[bool, str]:
     state = group.get("current_state") or {}
     status = state.get("status", "unknown")
-    counts = state.get("instance_status_count") or {}
+    counts = state.get("instance_status_counts") or state.get("instance_status_count") or {}
     running = counts.get("running_count", 0)
     replicas = group.get("replicas", 1)
 

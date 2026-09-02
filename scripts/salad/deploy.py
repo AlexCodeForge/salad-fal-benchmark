@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import httpx
 import yaml
 
 from _api import CONFIG_DIR, SaladClient, analyze_group_name, raise_api_error
@@ -73,27 +74,27 @@ def deploy_group(
     assert client is not None
     existing = client.get_container_group(name)
     if existing:
-        print(f"  updating existing group {name}")
-        resp = client.patch(
-            client._project_path(f"/containers/{name}"),
-            _update_payload(body),
-        )
-        if resp.status_code >= 400:
-            raise_api_error(resp, f"update {name}")
-        updated = resp.json()
+        print(f"  patching existing group {name}")
+        try:
+            updated = client.update_container_group(name, _update_payload(body))
+        except Exception:
+            resp = client.patch(
+                client._project_path(f"/containers/{name}"),
+                _update_payload(body),
+            )
+            if resp.status_code >= 400:
+                raise_api_error(resp, f"update {name}")
+            updated = resp.json()
         print(f"  updated (version={updated.get('version', '?')})")
         return updated
 
-    resp = client.post(client._project_path("/containers"), body)
-    if resp.status_code == 409:
-        print(f"  conflict — updating {name}")
-        resp = client.patch(
-            client._project_path(f"/containers/{name}"),
-            _update_payload(body),
-        )
-    if resp.status_code >= 400:
-        raise_api_error(resp, f"deploy {name}")
-    created = resp.json()
+    try:
+        created = client.create_container_group(body)
+    except httpx.HTTPStatusError as exc:
+        if exc.response.status_code != 409:
+            raise
+        print(f"  conflict — patching existing {name}")
+        created = client.update_container_group(name, _update_payload(body))
     print(f"  created (id={created.get('id', '?')})")
     return created
 
