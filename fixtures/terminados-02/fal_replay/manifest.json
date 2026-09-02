@@ -1,0 +1,10 @@
+{
+  "calls": [
+    {"label": "wall:wall:sam3", "endpoint": "fal-ai/sam-3/image", "file": "sam-3-wall-wall.json"},
+    {"label": "wall:molding:sam3", "endpoint": "fal-ai/sam-3/image", "file": "sam-3-wall-molding.json"},
+    {"label": "wall:mullion:sam3", "endpoint": "fal-ai/sam-3/image", "file": "sam-3-wall-mullion.json"},
+    {"label": "floor:floor:sam3", "endpoint": "fal-ai/sam-3/image", "file": "sam-3-floor-floor.json"},
+    {"label": "depth", "endpoint": "fal-ai/image-preprocessors/depth-anything/v2", "file": "depth-anything-v2.json"},
+    {"label": "room-height:gemini-2.5-flash", "endpoint": "fal-ai/any-llm/vision", "file": "room-height-vlm.json"}
+  ]
+}

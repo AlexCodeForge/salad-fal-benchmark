@@ -1,0 +1,63 @@
+# Rust production analyze scope (segment_fal) — sequential SAM3 + depth.
+# SSOT: teselio-engine-rs crates/preprocess/analyze/fal/src/pipeline.rs
+
+mode: sequential
+
+stages:
+  - id: upload
+    label: upload
+    kind: upload
+    backend: fal  # Salad uses per-request multipart; upload_ms tracked separately
+
+  - id: sam3_wall
+    label: wall:wall:sam3
+    kind: sam3
+    endpoint: fal-ai/sam-3/image
+    class: wall
+    prompt: wall
+    max_masks: 8
+    min_score: 0.25
+    depends_on: [upload]
+
+  - id: sam3_molding
+    label: wall:molding:sam3
+    kind: sam3
+    endpoint: fal-ai/sam-3/image
+    class: wall
+    prompt: molding
+    max_masks: 4
+    min_score: 0.25
+    depends_on: [sam3_wall]
+
+  - id: sam3_mullion
+    label: wall:mullion:sam3
+    kind: sam3
+    endpoint: fal-ai/sam-3/image
+    class: wall
+    prompt: mullion
+    max_masks: 4
+    min_score: 0.25
+    depends_on: [sam3_molding]
+
+  - id: sam3_floor
+    label: floor:floor:sam3
+    kind: sam3
+    endpoint: fal-ai/sam-3/image
+    class: floor
+    prompt: floor
+    max_masks: 8
+    min_score: 0.25
+    depends_on: [sam3_mullion]
+
+  - id: depth
+    label: depth
+    kind: depth
+    endpoint: fal-ai/image-preprocessors/depth-anything/v2
+    depends_on: [sam3_floor]
+
+  - id: postprocess
+    label: postprocess
+    kind: postprocess
+    wall_height_cm: 260.0
+    wall_height_source: stub
+    depends_on: [depth]

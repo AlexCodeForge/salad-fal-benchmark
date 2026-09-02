@@ -1,0 +1,9 @@
+# fal.ai per-call API pricing (SSOT: teselio-engine-rs analyze-fal constants)
+fal:
+  sam3_usd_per_call: 0.005
+  depth_usd_per_call: 0.0
+
+# Salad SCE GPU-hour allocation (RTX 4090 benchmark default)
+salad:
+  gpu_class: rtx_4090
+  gpu_hour_usd: 0.16

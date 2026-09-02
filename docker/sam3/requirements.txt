@@ -1,0 +1,13 @@
+fastapi>=0.115.0,<1
+uvicorn[standard]>=0.32.0,<1
+python-multipart>=0.0.12,<1
+pydantic>=2.10.0,<3
+pydantic-settings>=2.6.0,<3
+pillow>=11.0.0,<12
+httpx>=0.28.0,<1
+numpy>=2.0.0,<3
+pyyaml>=6.0.2,<7
+# Real inference (skipped when MOCK_INFERENCE=1 at runtime)
+transformers>=4.57.0,<5
+accelerate>=1.2.0,<2
+safetensors>=0.5.0,<1

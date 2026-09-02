@@ -1,0 +1,5 @@
+{
+  "masks": [{"url": "masks/floor_1.png", "score": 0.92}],
+  "scores": [0.92],
+  "boxes": [[0.0, 0.55, 1.0, 0.45]]
+}

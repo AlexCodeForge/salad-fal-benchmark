@@ -1,0 +1,83 @@
+# Benchmark fixture tiers (SSOT for bench list-fixtures / runner).
+# Tier A: CI replay (no FAL_KEY). Tier B: live v1 benchmark (N=10).
+
+tier_a:
+  - id: terminados-02
+    scene_slug: terminados-02-cocina-isleta-negra
+    lab_image: terminados-02-cocina-isleta-negra.jpg
+    width: 2278
+    height: 1708
+    room_type: cocina
+    replay: true
+
+tier_b:
+  - id: terminados-02
+    scene_slug: terminados-02-cocina-isleta-negra
+    lab_image: terminados-02-cocina-isleta-negra.jpg
+    width: 2278
+    height: 1708
+    room_type: cocina
+    replay: true
+  - id: terminados-09-bano-simple
+    scene_slug: terminados-09-bano-simple
+    lab_image: terminados-09-bano-simple.jpg
+    width: 2278
+    height: 1516
+    room_type: bano
+    replay: false
+  - id: terminados-04
+    scene_slug: terminados-04-salon-jardin
+    lab_image: terminados-04-salon-jardin.jpg
+    width: 1600
+    height: 1197
+    room_type: salon
+    replay: false
+  - id: terminados-16
+    scene_slug: terminados-16-dormitorio-blanco-minimalista
+    lab_image: terminados-16-dormitorio-blanco-minimalista.jpg
+    width: 2000
+    height: 1333
+    room_type: dormitorio
+    replay: false
+  - id: terminados-20
+    scene_slug: terminados-20-oficina-ordenadores-modernos
+    lab_image: terminados-20-oficina-ordenadores-modernos.jpg
+    width: 2000
+    height: 1333
+    room_type: oficina
+    replay: false
+  - id: terminados-01
+    scene_slug: terminados-01-bano-banera-mueble-azul
+    lab_image: terminados-01-bano-banera-mueble-azul.jpg
+    width: 2278
+    height: 2278
+    room_type: bano
+    replay: false
+  - id: terminados-14
+    scene_slug: terminados-14-cocina-minimalista-marron
+    lab_image: terminados-14-cocina-minimalista-marron.jpg
+    width: 2000
+    height: 1333
+    room_type: cocina
+    replay: false
+  - id: terminados-23
+    scene_slug: terminados-23-salon-alfombra-tigre
+    lab_image: terminados-23-salon-alfombra-tigre.jpg
+    width: 2000
+    height: 1331
+    room_type: salon
+    replay: false
+  - id: terminados-28
+    scene_slug: terminados-28-terraza-patio-exterior
+    lab_image: terminados-28-terraza-patio-exterior.jpg
+    width: 2000
+    height: 1506
+    room_type: terraza
+    replay: false
+  - id: terminados-03
+    scene_slug: terminados-03-oficina-sillones
+    lab_image: terminados-03-oficina-sillones.jpg
+    width: 1600
+    height: 1067
+    room_type: oficina
+    replay: false

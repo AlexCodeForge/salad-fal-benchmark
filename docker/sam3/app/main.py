@@ -1,0 +1,159 @@
+"""FastAPI entrypoint — fal-shaped SAM3 gateway for Salad benchmark."""
+
+from __future__ import annotations
+
+import io
+import logging
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi.responses import JSONResponse
+from PIL import Image
+
+from app.model import (
+    decode_base64_image,
+    engine,
+    fetch_image_url,
+)
+from app.schemas import Sam3InferenceParams, Sam3Request, Sam3Response
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    engine.warm_load()
+    yield
+
+
+app = FastAPI(title="salad-fal-benchmark SAM3", version="0.1.0", lifespan=lifespan)
+
+
+@app.get("/health")
+def health() -> dict:
+    st = engine.status()
+    ok = st["mock_inference"] or st["model_loaded"]
+    body = {"status": "ok" if ok else "loading", **st}
+    if not ok and st["load_error"]:
+        return JSONResponse(status_code=503, content={**body, "status": "error"})
+    return body
+
+
+def _parse_bool(value: object, default: bool) -> bool:
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    text = str(value).strip().lower()
+    if text in {"1", "true", "yes", "on"}:
+        return True
+    if text in {"0", "false", "no", "off"}:
+        return False
+    return default
+
+
+def _parse_int(value: object, default: int) -> int:
+    if value is None:
+        return default
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _sam3_params_from_form(form: dict[str, object]) -> Sam3InferenceParams:
+    prompt = form.get("prompt")
+    if not prompt:
+        raise HTTPException(status_code=400, detail="prompt is required")
+    return Sam3InferenceParams(
+        prompt=str(prompt),
+        apply_mask=_parse_bool(form.get("apply_mask"), False),
+        return_multiple_masks=_parse_bool(form.get("return_multiple_masks"), True),
+        max_masks=_parse_int(form.get("max_masks"), 8),
+        include_scores=_parse_bool(form.get("include_scores"), True),
+        include_boxes=_parse_bool(form.get("include_boxes"), True),
+    )
+
+
+async def _resolve_image(body: Sam3Request) -> Image.Image:
+    try:
+        if body.image_url:
+            return await fetch_image_url(body.image_url)
+        inline = body.inline_image_b64
+        if inline:
+            return decode_base64_image(inline)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=400, detail=f"Invalid image input: {exc}") from exc
+    raise HTTPException(status_code=400, detail="Either image_url, image, or image_base64 is required")
+
+
+async def _run_sam3(image: Image.Image, params: Sam3InferenceParams) -> Sam3Response:
+    if not engine.mock and not engine.status()["model_loaded"]:
+        err = engine.status().get("load_error")
+        raise HTTPException(
+            status_code=503,
+            detail=f"SAM3 model not loaded{f': {err}' if err else ''}",
+        )
+
+    try:
+        result = engine.infer(
+            image,
+            params.prompt,
+            max_masks=params.max_masks,
+            include_scores=params.include_scores,
+            include_boxes=params.include_boxes,
+            return_multiple_masks=params.return_multiple_masks,
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("Inference failed")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    return Sam3Response(**result)
+
+
+@app.post("/v1/sam3", response_model=Sam3Response)
+async def sam3_endpoint(
+    request: Request,
+    image: UploadFile | None = File(default=None),
+) -> Sam3Response:
+    pil: Image.Image | None = None
+
+    if image is not None and image.filename:
+        data = await image.read()
+        try:
+            pil = Image.open(io.BytesIO(data)).convert("RGB")
+        except OSError as exc:
+            raise HTTPException(status_code=400, detail=f"invalid multipart image: {exc}") from exc
+        form = await request.form()
+        params = _sam3_params_from_form(dict(form))
+        return await _run_sam3(pil, params)
+
+    content_type = (request.headers.get("content-type") or "").lower()
+    if content_type.startswith("multipart/"):
+        form = await request.form()
+        file_field = form.get("image")
+        if file_field is not None and hasattr(file_field, "read"):
+            data = await file_field.read()
+            try:
+                pil = Image.open(io.BytesIO(data)).convert("RGB")
+            except OSError as exc:
+                raise HTTPException(status_code=400, detail=f"invalid multipart image: {exc}") from exc
+            params = _sam3_params_from_form(dict(form))
+            return await _run_sam3(pil, params)
+
+    try:
+        payload = await request.json()
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="JSON body or multipart image required") from exc
+
+    try:
+        body = Sam3Request.model_validate(payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    pil = await _resolve_image(body)
+    return await _run_sam3(pil, body)

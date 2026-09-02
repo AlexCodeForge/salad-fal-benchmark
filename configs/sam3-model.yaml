@@ -1,0 +1,17 @@
+# SAM3 model configuration for docker/sam3 (Salad GPU production).
+# Local dev: set MOCK_INFERENCE=1 to skip HF weight download (~10GB).
+
+model_id: facebook/sam3
+# Pin revision for reproducible Salad deploys, e.g.:
+# revision: abc123def456
+revision: null
+
+dtype: float16  # fp16 on CUDA; float32 on CPU fallback
+
+# post_process_instance_segmentation thresholds (transformers Sam3Processor)
+threshold: 0.5
+mask_threshold: 0.5
+
+# Inference limits (fal parity defaults in configs/stages.yaml)
+default_max_masks: 8
+max_max_masks: 32

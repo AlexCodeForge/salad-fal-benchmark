@@ -1,0 +1,45 @@
+# SCE container group template — Depth-Anything v2 inference (bench-depth).
+# deploy.py sets container.image from SALAD_DEPTH_IMAGE.
+#
+# GPU class UUIDs (4090 preferred, 3090 fallback):
+#   4090: ed563892-aacd-40f5-80b7-90c9be6c759b
+#   3090: a5db5c50-cbcb-4596-ae80-6a0c8090d80f
+
+name: bench-depth
+display_name: bench-depth
+
+container:
+  image: ""  # required: SALAD_DEPTH_IMAGE
+  priority: batch
+  environment_variables:
+    MOCK_INFERENCE: "1"
+    HOST: "::"
+    PORT: "8000"
+  resources:
+    cpu: 4
+    memory: 12288
+    gpu_classes:
+      - ed563892-aacd-40f5-80b7-90c9be6c759b
+      - a5db5c50-cbcb-4596-ae80-6a0c8090d80f
+    storage_amount: 26843545600  # 25 GiB
+
+autostart_policy: true
+restart_policy: always
+replicas: 1
+
+networking:
+  protocol: http
+  port: 8000
+  auth: true
+
+readiness_probe:
+  http:
+    path: /health
+    port: 8000
+    scheme: http
+    headers: []
+  initial_delay_seconds: 30
+  period_seconds: 10
+  timeout_seconds: 5
+  success_threshold: 1
+  failure_threshold: 3

@@ -1,0 +1,56 @@
+name: Publish container images
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  SAM3_IMAGE: ghcr.io/alexcodeforge/salad-fal-sam3:dev
+  DEPTH_IMAGE: ghcr.io/alexcodeforge/salad-fal-depth:dev
+
+jobs:
+  build-sam3:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push SAM3
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/sam3/Dockerfile
+          push: true
+          tags: ${{ env.SAM3_IMAGE }}
+
+  build-depth:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push depth
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/depth/Dockerfile
+          push: true
+          tags: ${{ env.DEPTH_IMAGE }}
