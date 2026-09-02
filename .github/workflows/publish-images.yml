@@ -54,3 +54,21 @@ jobs:
           file: docker/depth/Dockerfile
           push: true
           tags: ${{ env.DEPTH_IMAGE }}
+
+  make-public:
+    needs: [build-sam3, build-depth]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Set GHCR package visibility to public
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for pkg in salad-fal-sam3 salad-fal-depth; do
+            gh api --method PATCH "/user/packages/container/${pkg}" \
+              -f visibility=public \
+              || gh api --method PATCH "/user/packages/container/${pkg}" \
+              --input - <<< '{"visibility":"public"}'
+          done
