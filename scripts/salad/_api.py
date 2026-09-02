@@ -82,7 +82,11 @@ class SaladClient:
         return self._client.post(path, json=body)
 
     def patch(self, path: str, body: dict[str, Any]) -> httpx.Response:
-        return self._client.patch(path, json=body)
+        return self._client.patch(
+            path,
+            json=body,
+            headers={"Content-Type": "application/merge-patch+json"},
+        )
 
     def delete(self, path: str) -> httpx.Response:
         return self._client.delete(path)
