@@ -10,9 +10,12 @@ container:
   image: ""  # required: SALAD_ANALYZE_IMAGE
   priority: low
   environment_variables:
-    MOCK_INFERENCE: "1"
+    MOCK_INFERENCE: "0"
+    SAM3_MODEL: "facebook/sam3"
+    MODEL_ID: "depth-anything/Depth-Anything-V2-Large-hf"
     HOST: "::"
     PORT: "8000"
+    DEPLOY_REV: "2"
   resources:
     cpu: 4
     memory: 8192
