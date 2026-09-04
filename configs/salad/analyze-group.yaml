@@ -15,7 +15,8 @@ container:
     MODEL_ID: "depth-anything/Depth-Anything-V2-Large-hf"
     HOST: "::"
     PORT: "8000"
-    DEPLOY_REV: "2"
+    DEPLOY_REV: "4"
+    # HF_TOKEN / HUGGING_FACE_HUB_TOKEN: set via deploy.py from .env (gated SAM3)
   resources:
     cpu: 4
     memory: 8192

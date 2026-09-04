@@ -6,6 +6,12 @@ Measures latency, cost, and quality (mask IoU vs fal baseline, depth correlation
 
 See `configs/stages.yaml` for the Rust-prod stage DAG.
 
+## Lab UI
+
+Browser lab (fixture picker, fal/salad/both, replay, stages table):
+
+http://159.195.199.227:8000/lab/L076-salad-fal-benchmark/
+
 ## Quickstart
 
 ### Install
@@ -43,6 +49,8 @@ docker compose up -d --build
 curl -sS http://127.0.0.1:8001/health
 
 export SALAD_ANALYZE_GATEWAY_URL=http://127.0.0.1:8001
+
+> **L076 / cloud GPU:** use the Salad gateway URL from `print_gateways.py`, not `:8001`, unless you intentionally want mock masks.
 bench run --backend salad --fixture terminados-02 --runs 1
 ```
 

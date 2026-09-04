@@ -50,7 +50,7 @@ def load_config() -> ModelConfig:
 
 
 def mock_enabled() -> bool:
-    return os.environ.get("MOCK_INFERENCE", "1").strip().lower() in (
+    return os.environ.get("MOCK_INFERENCE", "0").strip().lower() in (
         "1",
         "true",
         "yes",

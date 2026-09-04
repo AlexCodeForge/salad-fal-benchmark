@@ -47,6 +47,16 @@ def _apply_overrides(spec: dict[str, Any], *, image: str, group_name: str) -> di
             }
         }
 
+    env_vars = body.setdefault("container", {}).setdefault("environment_variables", {})
+    mock = os.environ.get("MOCK_INFERENCE", "0").strip()
+    env_vars["MOCK_INFERENCE"] = mock if mock else "0"
+    hf_token = os.environ.get("HF_TOKEN", "").strip() or os.environ.get(
+        "HUGGING_FACE_HUB_TOKEN", ""
+    ).strip()
+    if hf_token:
+        env_vars["HF_TOKEN"] = hf_token
+        env_vars["HUGGING_FACE_HUB_TOKEN"] = hf_token
+
     return body
 
 

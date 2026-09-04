@@ -45,6 +45,9 @@ run_bench() {
   fi
 }
 
+echo "Stopping any existing stack (including orphan containers) ..."
+docker compose down --remove-orphans
+
 echo "Starting local stack (analyze:8001, MOCK_INFERENCE=1) ..."
 docker compose up -d --build
 

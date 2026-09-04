@@ -1,12 +1,11 @@
 # Unified SAM3 + depth inference container for Salad GPU benchmark.
-# Local/CI: MOCK_INFERENCE=1 (default) — no HF downloads.
-# Production Salad: MOCK_INFERENCE=0 with SAM3_MODEL and MODEL_ID set.
+# Default MOCK_INFERENCE=0 for GPU/Salad images; docker-compose sets MOCK_INFERENCE=1 for local dev.
 
 FROM pytorch/pytorch:2.7.1-cuda12.6-cudnn9-runtime
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    MOCK_INFERENCE=1 \
+    MOCK_INFERENCE=0 \
     SAM3_MODEL=facebook/sam3 \
     SAM3_CONFIG_PATH=/app/configs/sam3-model.yaml \
     MODEL_ID=depth-anything/Depth-Anything-V2-Small-hf \

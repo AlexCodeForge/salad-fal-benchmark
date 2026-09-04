@@ -12,7 +12,7 @@ container:
   image: ""  # required: SALAD_DEPTH_IMAGE
   priority: batch
   environment_variables:
-    MOCK_INFERENCE: "1"
+    MOCK_INFERENCE: "0"
     HOST: "::"
     PORT: "8000"
   resources:

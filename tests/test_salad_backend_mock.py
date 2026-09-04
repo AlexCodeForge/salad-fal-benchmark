@@ -64,6 +64,8 @@ def unified_settings() -> BenchSettings:
 def dual_settings() -> BenchSettings:
     return BenchSettings(
         salad_api_key=API_KEY,
+        salad_analyze_gateway_url="",
+        salad_gateway_url="",
         salad_sam3_gateway_url=SAM3_URL,
         salad_depth_gateway_url=DEPTH_URL,
         bench_http_timeout_s=120.0,
@@ -139,7 +141,15 @@ def test_segment_salad_unified_gateway(unified_settings: BenchSettings) -> None:
     assert all(host == "analyze.example.test" for host in hosts)
 
 
-def test_segment_salad_dual_gateway_compat(dual_settings: BenchSettings) -> None:
+def test_segment_salad_dual_gateway_compat(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("SALAD_ANALYZE_GATEWAY_URL", raising=False)
+    monkeypatch.delenv("SALAD_GATEWAY_URL", raising=False)
+    settings = BenchSettings(
+        salad_api_key=API_KEY,
+        salad_sam3_gateway_url=SAM3_URL,
+        salad_depth_gateway_url=DEPTH_URL,
+        bench_http_timeout_s=120.0,
+    )
     sam3_calls: list[str] = []
     depth_calls: list[str] = []
 
@@ -156,7 +166,7 @@ def test_segment_salad_dual_gateway_compat(dual_settings: BenchSettings) -> None
 
     transport = httpx.MockTransport(handler)
     client = SaladGatewayClient(API_KEY, transport=transport)
-    output = segment_salad(MINIMAL_JPEG, settings=dual_settings, client=client)
+    output = segment_salad(MINIMAL_JPEG, settings=settings, client=client)
     client.close()
 
     assert len(output.stages) == 5
@@ -172,6 +182,36 @@ def test_segment_salad_dual_gateway_compat(dual_settings: BenchSettings) -> None
     assert len(depth_calls) == 1
     assert sam3_calls[0] == "sam3.example.test"
     assert depth_calls[0] == "depth.example.test"
+
+
+def test_segment_salad_prefers_analyze_over_dual_gateway() -> None:
+    """When both unified and legacy dual URLs are set, use analyze gateway."""
+    settings = BenchSettings(
+        salad_api_key=API_KEY,
+        salad_analyze_gateway_url=ANALYZE_URL,
+        salad_sam3_gateway_url=SAM3_URL,
+        salad_depth_gateway_url=DEPTH_URL,
+        bench_http_timeout_s=120.0,
+    )
+    hosts: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        hosts.append(request.url.host or "")
+        path = request.url.path
+        if path.endswith("/v1/sam3"):
+            return httpx.Response(200, json=SAM3_RESPONSE)
+        if path.endswith("/v1/depth"):
+            return httpx.Response(200, json=DEPTH_RESPONSE)
+        return httpx.Response(404, json={"error": "not found"})
+
+    transport = httpx.MockTransport(handler)
+    client = SaladGatewayClient(API_KEY, transport=transport)
+    output = segment_salad(MINIMAL_JPEG, settings=settings, client=client)
+    client.close()
+
+    assert all(stage.success for stage in output.stages)
+    assert len(hosts) == 5
+    assert all(host == "analyze.example.test" for host in hosts)
 
 
 def test_salad_backend_requires_gateway_urls(monkeypatch: pytest.MonkeyPatch) -> None:

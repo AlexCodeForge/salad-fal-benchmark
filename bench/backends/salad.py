@@ -16,12 +16,7 @@ from bench.salad.upload import build_depth_post, build_sam3_post, image_dimensio
 SAM3_PATH = "/v1/sam3"
 DEPTH_PATH = "/v1/depth"
 
-WALL_SAM3_STAGES: tuple[tuple[str, str, str, int], ...] = (
-    ("wall:wall:sam3", "wall", "wall", 8),
-    ("wall:molding:sam3", "wall", "molding", 4),
-    ("wall:mullion:sam3", "wall", "mullion", 4),
-)
-FLOOR_SAM3_STAGE = ("floor:floor:sam3", "floor", "floor", 8)
+from bench.compare_scope import FLOOR_SAM3_STAGE, wall_sam3_stages
 DEPTH_LABEL = "depth"
 
 WALL_HEIGHT_CM_STUB = 260.0
@@ -79,7 +74,11 @@ class SaladBackend:
         self.close()
 
     def _resolve_gateway_urls(self) -> tuple[str, str]:
-        """Unified analyze gateway, or legacy dual sam3/depth URLs."""
+        """Unified analyze gateway (preferred), or legacy dual sam3/depth URLs."""
+        analyze_url = self.settings.resolved_analyze_gateway_url()
+        if analyze_url:
+            return analyze_url, analyze_url
+
         if self.settings.salad_sam3_gateway_url:
             sam3_url = self.settings.salad_sam3_gateway_url
             depth_url = self.settings.salad_depth_gateway_url
@@ -89,13 +88,10 @@ class SaladBackend:
                 )
             return sam3_url, depth_url
 
-        analyze_url = self.settings.resolved_analyze_gateway_url()
-        if not analyze_url:
-            raise ValueError(
-                "SALAD_ANALYZE_GATEWAY_URL (or SALAD_GATEWAY_URL) must be set; "
-                "or set SALAD_SAM3_GATEWAY_URL + SALAD_DEPTH_GATEWAY_URL for dual mode"
-            )
-        return analyze_url, analyze_url
+        raise ValueError(
+            "SALAD_ANALYZE_GATEWAY_URL (or SALAD_GATEWAY_URL) must be set; "
+            "or set SALAD_SAM3_GATEWAY_URL + SALAD_DEPTH_GATEWAY_URL for dual mode"
+        )
 
     def segment(self, image_bytes: bytes) -> SaladSegmentOutput:
         """Sequential 4× SAM3 + depth; VLM stubbed at 260 cm."""
@@ -108,7 +104,7 @@ class SaladBackend:
         upload_start = time.perf_counter()
         upload_ms = (time.perf_counter() - upload_start) * 1000.0
 
-        for label, _class_name, prompt, max_masks in (*WALL_SAM3_STAGES, FLOOR_SAM3_STAGE):
+        for label, _class_name, prompt, max_masks in (*wall_sam3_stages(), FLOOR_SAM3_STAGE):
             stage = self._run_sam3(
                 _gateway_url(sam3_url, SAM3_PATH),
                 image_bytes,

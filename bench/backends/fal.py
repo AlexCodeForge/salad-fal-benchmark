@@ -8,17 +8,17 @@ from typing import Any
 
 from bench.backends.base import BenchmarkResult, StageResult
 from bench.fal.client import FalCallTracker, FalClient, FalClientConfig
+from bench.compare_scope import (
+    floor_sam3_prompts,
+    max_floor_masks,
+    max_wall_masks,
+    wall_sam3_prompts,
+)
 from bench.fal.constants import (
     DEPTH_ENDPOINT,
-    FLOOR_SAM3_PROMPTS,
-    MAX_FLOOR_MASKS,
-    MAX_FLOOR_SAM3_EXTRA_MASKS,
-    MAX_WALL_MASKS,
-    MAX_WALL_SAM3_EXTRA_MASKS,
     SAM3_IMAGE_ENDPOINT,
     WALL_HEIGHT_STUB_CM,
     WALL_HEIGHT_STUB_SOURCE,
-    WALL_SAM3_PROMPTS,
 )
 from bench.fal.replay import resolve_fixture_dir, resolve_photo_path, resolve_replay_dir
 
@@ -33,10 +33,10 @@ class FalBackend:
         image_bytes = photo_path.read_bytes()
 
         replay_dir = resolve_replay_dir(fixture_dir) if self.replay else None
-        client_config = FalClientConfig(replay=self.replay, replay_dir=replay_dir)
-        if self.replay and not client_config.replay_dir:
+        client_config = FalClientConfig.from_env(replay_dir=replay_dir)
+        client_config.replay = self.replay
+        if self.replay:
             client_config.replay_dir = replay_dir
-            client_config.replay = True
 
         tracker = FalCallTracker()
         t0 = time.perf_counter()
@@ -56,8 +56,8 @@ class FalBackend:
                 )
             )
 
-            for i, prompt in enumerate(WALL_SAM3_PROMPTS):
-                max_masks = MAX_WALL_MASKS if i == 0 else MAX_WALL_SAM3_EXTRA_MASKS
+            for i, prompt in enumerate(wall_sam3_prompts()):
+                max_masks = max_wall_masks(i)
                 stage = self._run_sam3(
                     client,
                     tracker,
@@ -68,8 +68,8 @@ class FalBackend:
                 )
                 stages.append(stage)
 
-            for i, prompt in enumerate(FLOOR_SAM3_PROMPTS):
-                max_masks = MAX_FLOOR_MASKS if i == 0 else MAX_FLOOR_SAM3_EXTRA_MASKS
+            for i, prompt in enumerate(floor_sam3_prompts()):
+                max_masks = max_floor_masks(i)
                 stage = self._run_sam3(
                     client,
                     tracker,
